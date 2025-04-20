@@ -1,11 +1,19 @@
 const { MongoClient } = require("mongodb");
-const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const bcrypt = require("bcryptjs");
 
 const uri = process.env.MONGO_URI;
-const JWT_SECRET = process.env.JWT_SECRET;
 const EMAIL_USER = process.env.SENDER_EMAIL;
 const EMAIL_PASS = process.env.SENDER_PASS;
+
+function generateTemporaryPassword(length = 10) {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+  let password = "";
+  for (let i = 0; i < length; i++) {
+    password += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return password;
+}
 
 module.exports = async function (context, req) {
   if (req.method !== "POST") {
@@ -43,10 +51,13 @@ module.exports = async function (context, req) {
       return;
     }
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "30m" });
+    const tempPassword = generateTemporaryPassword();
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    const resetUrl = `http://192.168.0.14:3000/reset-password?token=${token}`;
-
+    await users.updateOne(
+      { email },
+      { $set: { password: hashedPassword } }
+    );
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -59,12 +70,12 @@ module.exports = async function (context, req) {
     await transporter.sendMail({
       from: `"KADAL Soporte" <${EMAIL_USER}>`,
       to: email,
-      subject: "Recuperar contraseña - KADAL",
+      subject: "Recuperación de contraseña temporal - KADAL",
       html: `
         <h2>Hola ${user.nombre}</h2>
-        <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-        <a href="${resetUrl}">${resetUrl}</a>
-        <p><strong>Este enlace expirará en 30 minutos.</strong></p>
+        <p>Se ha generado una contraseña temporal para que puedas ingresar a tu cuenta:</p>
+        <p style="font-size: 20px; font-weight: bold; color: #6c63ff;">${tempPassword}</p>
+        <p>Por seguridad, te recomendamos cambiar esta contraseña desde tu perfil una vez inicies sesión.</p>
         <br/>
         <p>Si no solicitaste esto, puedes ignorar este mensaje.</p>
       `,
@@ -72,13 +83,13 @@ module.exports = async function (context, req) {
 
     context.res = {
       status: 200,
-      body: { message: "Correo enviado para restablecer contraseña" },
+      body: { message: "Contraseña temporal enviada al correo" },
     };
   } catch (error) {
     context.log("Error en resetPasswordRequest:", error);
     context.res = {
       status: 500,
-      body: { message: "Error al enviar el correo" },
+      body: { message: "Error al generar la contraseña temporal" },
     };
   } finally {
     await client.close();

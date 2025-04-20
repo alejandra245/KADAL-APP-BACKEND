@@ -40,7 +40,6 @@ module.exports = async function (context, req) {
       return;
     }
 
-    // ⚠️ Validar si el usuario ya verificó su correo
     if (!user.verificado) {
       context.res = {
         status: 403,
@@ -63,17 +62,19 @@ module.exports = async function (context, req) {
       JWT_SECRET,
       { expiresIn: "7d" }
     );
+
     context.res = {
       status: 200,
       body: {
         message: "Inicio de sesión exitoso",
         token,
         nombre: user.nombre,
-        nombreNino: user.nombreNino, 
-        id: user._id
+        nombreNino: user.nombreNino,
+        id: user._id,
+        isTempPassword: !!user.isTempPassword  // Agregar esta propiedad
       }
     };
-    
+
   } catch (error) {
     context.log("Error en login:", error);
     context.res = {
