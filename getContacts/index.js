@@ -1,13 +1,13 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
-  const userId = context.bindingData.userId;
+  const _id_usuario = context.bindingData.userId;
 
-  if (!userId) {
+  if (!_id_usuario) {
     context.res = {
       status: 400,
-      body: "Falta el userId en la ruta"
+      body: "Falta el userId en la ruta (_id_usuario)"
     };
     return;
   }
@@ -19,7 +19,8 @@ module.exports = async function (context, req) {
     const db = client.db("kadalDB");
     const contactos = db.collection("contacts");
 
-    const listaContactos = await contactos.find({ userId }).toArray();
+    // Buscar todos los contactos con ese _id_usuario
+    const listaContactos = await contactos.find({ _id_usuario }).toArray();
 
     context.res = {
       status: 200,

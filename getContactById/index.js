@@ -1,13 +1,13 @@
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
-  const idContacto = context.bindingData.contactId;
+  const contactId = context.bindingData.contactId;
 
-  if (!idContacto) {
+  if (!contactId) {
     context.res = {
       status: 400,
-      body: "Falta el ID del contacto (_id_contacto)"
+      body: "Falta el ID del contacto en la ruta"
     };
     return;
   }
@@ -19,22 +19,22 @@ module.exports = async function (context, req) {
     const db = client.db("kadalDB");
     const contactos = db.collection("contacts");
 
-    // Borramos por el campo personalizado del ESP32
-    const result = await contactos.deleteOne({ _id_contacto: idContacto });
+    const contacto = await contactos.findOne({ _id: new ObjectId(contactId) });
 
-    if (result.deletedCount === 0) {
+    if (!contacto) {
       context.res = {
         status: 404,
         body: "Contacto no encontrado"
       };
-    } else {
-      context.res = {
-        status: 200,
-        body: "Contacto eliminado correctamente"
-      };
+      return;
     }
+
+    context.res = {
+      status: 200,
+      body: contacto
+    };
   } catch (error) {
-    context.log("Error al eliminar contacto:", error);
+    context.log("Error al obtener contacto:", error);
     context.res = {
       status: 500,
       body: "Error del servidor"

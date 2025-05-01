@@ -1,22 +1,22 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
-  const contactId = context.bindingData.contactId;
-  const { nombre, telefono } = req.body;
+  const contactId = context.bindingData.contactId; // viene del path /updateContact/:contactId
+  const { _id_usuario, _id_kadal, nombre, numero_telefonico } = req.body;
 
   if (!contactId) {
     context.res = {
       status: 400,
-      body: "Falta el ID del contacto"
+      body: "Falta el ID del contacto (_id_contacto)"
     };
     return;
   }
 
-  if (!nombre || !telefono) {
+  if (!nombre || !numero_telefonico) {
     context.res = {
       status: 400,
-      body: "Nombre y teléfono son requeridos"
+      body: "Faltan campos obligatorios: nombre, numero_telefonico"
     };
     return;
   }
@@ -29,8 +29,16 @@ module.exports = async function (context, req) {
     const contactos = db.collection("contacts");
 
     const result = await contactos.updateOne(
-      { _id: new ObjectId(contactId) },
-      { $set: { nombre, telefono } }
+      { _id_contacto: contactId },
+      {
+        $set: {
+          nombre,
+          numero_telefonico,
+          _id_usuario,
+          _id_kadal,
+          fechaActualizacion: new Date()
+        }
+      }
     );
 
     if (result.matchedCount === 0) {

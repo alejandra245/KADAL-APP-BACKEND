@@ -98,7 +98,7 @@ module.exports = async function (context, req) {
       }
     });
 
-    const verificationLink = `http://192.168.1.92:7071/api/verifyEmail?token=${verificationToken}`;
+    const verificationLink = `http://192.168.0.14:7071/api/verifyEmail?token=${verificationToken}`;
 
     const mailOptions = {
       from: senderEmail,

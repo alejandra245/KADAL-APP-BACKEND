@@ -25,23 +25,41 @@ module.exports = async function (context, req) {
   try {
     await client.connect();
     const db = client.db("kadalDB");
-    const result = await db.collection("users").deleteOne({
+
+    // Eliminar el usuario
+    const userResult = await db.collection("users").deleteOne({
       _id: new ObjectId(userId),
     });
 
-    if (result.deletedCount === 0) {
+    if (userResult.deletedCount === 0) {
       context.res = {
         status: 404,
         body: "Usuario no encontrado",
       };
-    } else {
-      context.res = {
-        status: 200,
-        body: "Usuario eliminado exitosamente",
-      };
+      return;
     }
+
+    // Eliminar contactos de emergencia
+    await db.collection("contacts").deleteMany({ _id_usuario: userId });
+
+    // Eliminar geocercas
+    await db.collection("geocercas").deleteMany({ _id_usuario: userId });
+
+    // Eliminar llamadas
+    await db.collection("llamadas").deleteMany({ _id_usuario: userId });
+
+    // Eliminar notificaciones
+    await db.collection("notificaciones").deleteMany({ _id_usuario: userId });
+
+    // Eliminar ubicaciones
+    await db.collection("ubicaciones").deleteMany({ _id_usuario: userId });
+
+    context.res = {
+      status: 200,
+      body: "Usuario y datos relacionados eliminados exitosamente",
+    };
   } catch (error) {
-    context.log("Error al eliminar usuario:", error);
+    context.log("Error al eliminar usuario y datos:", error);
     context.res = {
       status: 500,
       body: "Error interno del servidor",

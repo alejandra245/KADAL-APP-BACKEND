@@ -10,12 +10,12 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const { userId, nombre, telefono } = req.body;
+  const { _id_contacto, _id_usuario, _id_kadal, nombre, numero_telefonico } = req.body;
 
-  if (!userId || !nombre || !telefono) {
+  if (!_id_contacto || !_id_usuario || !_id_kadal || !nombre || !numero_telefonico) {
     context.res = {
       status: 400,
-      body: "Faltan campos obligatorios (userId, nombre, telefono)"
+      body: "Faltan campos obligatorios (_id_contacto, _id_usuario, _id_kadal, nombre, numero_telefonico)"
     };
     return;
   }
@@ -28,9 +28,11 @@ module.exports = async function (context, req) {
     const contactos = db.collection("contacts");
 
     await contactos.insertOne({
-      userId,
+      _id_contacto,
+      _id_usuario,
+      _id_kadal,
       nombre,
-      telefono,
+      numero_telefonico,
       fechaCreacion: new Date()
     });
 
