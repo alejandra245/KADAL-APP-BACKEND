@@ -1,4 +1,4 @@
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 
 const uri = process.env.MONGO_URI;
 
@@ -11,33 +11,45 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const { _id_geocerca } = req.body;
+  const { _id } = req.query;
 
-  if (!_id_geocerca) {
+  if (!_id || !ObjectId.isValid(_id)) {
     context.res = {
       status: 400,
-      body: { message: "ID de la geocerca requerido" },
+      body: { message: "ID de la geocerca inválido o faltante" },
     };
     return;
   }
 
   try {
+    console.log("🗑️ Intentando eliminar geocerca con ID:", _id);
+
     const client = await MongoClient.connect(uri);
-    const db = client.db("kadal");
+    const db = client.db("kadalDB");
     const geocercas = db.collection("geocercas");
 
-    await geocercas.deleteOne({ _id_geocerca });
+    const result = await geocercas.deleteOne({ _id: new ObjectId(_id) });
 
-    context.res = {
-      status: 200,
-      body: { message: "Geocerca eliminada correctamente" },
-    };
+    if (result.deletedCount === 0) {
+      console.warn("⚠️ No se encontró ninguna geocerca con ese ID.");
+      context.res = {
+        status: 404,
+        body: { message: "Geocerca no encontrada" },
+      };
+    } else {
+      console.log("✅ Geocerca eliminada correctamente.");
+      context.res = {
+        status: 200,
+        body: { message: "Geocerca eliminada correctamente" },
+      };
+    }
 
-    client.close();
+    await client.close();
   } catch (error) {
+    console.error("❌ Error al eliminar geocerca:", error);
     context.res = {
       status: 500,
-      body: { message: "Error al eliminar geocerca", error },
+      body: { message: "Error al eliminar geocerca", error: error.message },
     };
   }
 };

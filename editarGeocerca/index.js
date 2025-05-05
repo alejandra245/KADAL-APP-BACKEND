@@ -11,9 +11,9 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const { _id_geocerca, nombre, radio } = req.body;
+  const { _id, nombre, radio } = req.body;
 
-  if (!_id_geocerca || !nombre || !radio) {
+  if (!_id || (!nombre && typeof radio === "undefined")) {
     context.res = {
       status: 400,
       body: { message: "Faltan campos obligatorios" },
@@ -21,26 +21,48 @@ module.exports = async function (context, req) {
     return;
   }
 
+  if (!ObjectId.isValid(_id)) {
+    context.res = {
+      status: 400,
+      body: { message: "ID de geocerca inválido" },
+    };
+    return;
+  }
+
   try {
     const client = await MongoClient.connect(uri);
-    const db = client.db("kadal");
+    const db = client.db("kadalDB");
     const geocercas = db.collection("geocercas");
 
-    await geocercas.updateOne(
-      { _id_geocerca },
-      { $set: { nombre, radio: parseInt(radio) } }
+    const updateFields = {};
+    if (nombre) updateFields.nombre = nombre;
+    if (typeof radio !== "undefined") updateFields.radio = parseInt(radio);
+
+    console.log("🛠️ Actualizando geocerca:", _id, updateFields);
+
+    const result = await geocercas.updateOne(
+      { _id: new ObjectId(_id) },
+      { $set: updateFields }
     );
 
-    context.res = {
-      status: 200,
-      body: { message: "Geocerca actualizada correctamente" },
-    };
+    if (result.modifiedCount === 0) {
+      context.res = {
+        status: 404,
+        body: { message: "No se encontró la geocerca o no hubo cambios" },
+      };
+    } else {
+      context.res = {
+        status: 200,
+        body: { message: "Geocerca actualizada correctamente" },
+      };
+    }
 
-    client.close();
+    await client.close();
   } catch (error) {
+    console.error("❌ Error al actualizar geocerca:", error);
     context.res = {
       status: 500,
-      body: { message: "Error al actualizar geocerca", error },
+      body: { message: "Error al actualizar geocerca", error: error.message },
     };
   }
 };
