@@ -1,5 +1,6 @@
 const { MongoClient } = require("mongodb");
-const bcrypt = require("bcrypt");
+//nst bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 
@@ -98,7 +99,8 @@ module.exports = async function (context, req) {
       }
     });
 
-    const verificationLink = `http://172.20.10.12:7071/api/verifyEmail?token=${verificationToken}`;
+    const verificationLink = `https://kadal-functions-app.azurewebsites.net/api/verifyemail?token=${verificationToken}`;
+
 
     const mailOptions = {
       from: senderEmail,

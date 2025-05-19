@@ -1,11 +1,15 @@
 const { MongoClient } = require("mongodb");
-const bcrypt = require("bcrypt");
+//nst bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
 const uri = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 module.exports = async function (context, req) {
+  context.log("🌍 MONGO_URI:", process.env.MONGO_URI);
+  context.log("🔐 JWT_SECRET:", process.env.JWT_SECRET);
+
   if (req.method !== "POST") {
     context.res = {
       status: 405,

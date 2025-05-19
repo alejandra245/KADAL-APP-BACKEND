@@ -1,5 +1,6 @@
 const { MongoClient, ObjectId } = require("mongodb");
-const bcrypt = require("bcrypt");
+//nst bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const uri = process.env.MONGO_URI;
 

@@ -10,11 +10,12 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const { userId } = req.query;
-  if (!userId || !ObjectId.isValid(userId)) {
+  const { userId, kadalId } = req.query;
+
+  if (!userId || !ObjectId.isValid(userId) || !kadalId) {
     context.res = {
       status: 400,
-      body: { message: "ID de usuario inválido o faltante" },
+      body: { message: "Parámetros 'userId' o 'kadalId' inválidos o faltantes" },
     };
     return;
   }
@@ -23,32 +24,36 @@ module.exports = async function (context, req) {
     const client = await MongoClient.connect(uri);
     const db = client.db("kadalDB");
 
-    const usuarios = db.collection("usuarios");
-    const historial = db.collection("historial");
+    const configuracion = db.collection("configuracionHistorial");
+    const historial = db.collection("ubicaciones");
 
-    const usuario = await usuarios.findOne({ _id: new ObjectId(userId) });
+    const config = await configuracion.findOne({
+      _id_usuario: new ObjectId(userId),
+      _id_kadal: kadalId,
+    });
 
-    if (!usuario || !usuario.diasHistorial) {
+    if (!config || !config.dias) {
       context.res = {
         status: 404,
-        body: { message: "Usuario no encontrado o sin configuración de días" },
+        body: { message: "No se encontró configuración de historial para este usuario" },
       };
       return;
     }
 
-    const dias = parseInt(usuario.diasHistorial);
+    const dias = config.dias;
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - dias);
 
     const resultado = await historial.deleteMany({
       _id_usuario: new ObjectId(userId),
-      fechaHora: { $lt: fechaLimite.toISOString() },
+      _id_kadal: kadalId,
+      fecha: { $lt: fechaLimite },
     });
 
     context.res = {
       status: 200,
       body: {
-        message: `Se eliminaron ${resultado.deletedCount} registros del historial`,
+        message: `🧹 Se eliminaron ${resultado.deletedCount} registros anteriores a ${dias} días`,
       },
     };
 
@@ -56,7 +61,10 @@ module.exports = async function (context, req) {
   } catch (error) {
     context.res = {
       status: 500,
-      body: { message: "Error al limpiar historial", error: error.message },
+      body: {
+        message: "❌ Error al limpiar historial",
+        error: error.message,
+      },
     };
   }
 };

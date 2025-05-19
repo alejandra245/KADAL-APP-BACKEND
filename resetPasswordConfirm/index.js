@@ -1,6 +1,7 @@
 const { MongoClient, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+//nst bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const uri = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET;

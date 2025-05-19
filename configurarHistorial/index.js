@@ -1,4 +1,4 @@
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 
 const uri = process.env.MONGO_URI;
 
@@ -11,12 +11,12 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const { _id_kadal, dias } = req.body;
+  const { _id_kadal, _id_usuario, dias } = req.body;
 
-  if (!_id_kadal || !dias || typeof dias !== "number") {
+  if (!_id_kadal || !_id_usuario || typeof dias !== "number" || dias < 1 || dias > 7) {
     context.res = {
       status: 400,
-      body: { message: "Faltan campos obligatorios o el tipo es inválido" },
+      body: { message: "Faltan campos obligatorios o el valor de 'dias' es inválido (1-14)" },
     };
     return;
   }
@@ -27,8 +27,13 @@ module.exports = async function (context, req) {
     const configuracion = db.collection("configuracionHistorial");
 
     await configuracion.updateOne(
-      { _id_kadal },
-      { $set: { dias } },
+      {
+        _id_kadal,
+        _id_usuario: new ObjectId(_id_usuario),
+      },
+      {
+        $set: { dias },
+      },
       { upsert: true }
     );
 
@@ -37,11 +42,14 @@ module.exports = async function (context, req) {
       body: { message: "Configuración actualizada correctamente" },
     };
 
-    client.close();
+    await client.close();
   } catch (error) {
     context.res = {
       status: 500,
-      body: { message: "Error al guardar configuración", error: error.message },
+      body: {
+        message: "Error al guardar configuración",
+        error: error.message,
+      },
     };
   }
 };

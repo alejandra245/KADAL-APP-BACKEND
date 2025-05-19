@@ -1,4 +1,4 @@
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 
 const uri = process.env.MONGO_URI;
 
@@ -11,11 +11,21 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const kadalId = req.query.kadalId;
-  if (!kadalId) {
+  const kadalId = req.query.kadalId?.trim();
+  const userId = req.query.userId?.trim();
+
+  if (!kadalId || !userId) {
     context.res = {
       status: 400,
-      body: { message: "Falta el parámetro kadalId" },
+      body: { message: "Faltan los parámetros kadalId o userId" },
+    };
+    return;
+  }
+
+  if (!ObjectId.isValid(userId)) {
+    context.res = {
+      status: 400,
+      body: { message: "El userId no es un ObjectId válido" },
     };
     return;
   }
@@ -24,28 +34,29 @@ module.exports = async function (context, req) {
     const client = await MongoClient.connect(uri);
     const db = client.db("kadalDB");
 
-    const historial = db.collection("ubicaciones");
     const configuracion = db.collection("configuracionHistorial");
+    const historial = db.collection("ubicaciones");
 
-    const config = await configuracion.findOne({ _id_kadal: kadalId });
+    const config = await configuracion.findOne({
+      _id_kadal: kadalId,
+      _id_usuario: new ObjectId(userId),
+    });
+
     const dias = config?.dias || 7;
 
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - dias);
 
-    console.log("🕒 Fecha límite:", fechaLimite.toISOString()); // <--- aquí
-
     const ubicaciones = await historial
       .find({
         _id_kadal: kadalId,
+        _id_usuario: new ObjectId(userId),
         latitud: { $ne: "" },
         longitud: { $ne: "" },
-        fecha: { $gte: fechaLimite },  
+        fecha: { $gte: fechaLimite },
       })
-      .sort({ fecha: -1 }) 
+      .sort({ fecha: -1 })
       .toArray();
-
-      console.log("📍 Ubicaciones encontradas:", ubicaciones);
 
     context.res = {
       status: 200,

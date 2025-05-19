@@ -1,0 +1,14 @@
+{
+    "bindings": [
+      {
+        "type": "eventHubTrigger",
+        "name": "IoTHubMessage",
+        "direction": "in",
+        "eventHubName": "messages/events",
+        "connection": "AzureWebJobsEventHubConnectionString",
+        "consumerGroup": "$Default"
+      }
+    ],
+    "scriptFile": "index.js"
+  }
+  
