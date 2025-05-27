@@ -53,7 +53,7 @@ module.exports = async function (context, req) {
     context.res = {
       status: 200,
       body: {
-        message: `🧹 Se eliminaron ${resultado.deletedCount} registros anteriores a ${dias} días`,
+        message: ` Se eliminaron ${resultado.deletedCount} registros anteriores a ${dias} días`,
       },
     };
 
@@ -62,7 +62,7 @@ module.exports = async function (context, req) {
     context.res = {
       status: 500,
       body: {
-        message: "❌ Error al limpiar historial",
+        message: " Error al limpiar historial",
         error: error.message,
       },
     };

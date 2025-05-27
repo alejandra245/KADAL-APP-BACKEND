@@ -1,5 +1,4 @@
 const { MongoClient } = require("mongodb");
-//nst bcrypt = require("bcrypt");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
@@ -20,7 +19,6 @@ module.exports = async function (context, req) {
 
   const { email, password, nombre, telefono, confirmPassword, nombreNino } = req.body;
 
-  // Validar que todos los campos estén presentes
   if (!email || !password || !nombre || !telefono || !confirmPassword || !nombreNino) {
     context.res = {
       status: 400,
@@ -29,7 +27,6 @@ module.exports = async function (context, req) {
     return;
   }
 
-  // Validaciones básicas
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     context.res = {
       status: 400,
@@ -77,18 +74,23 @@ module.exports = async function (context, req) {
       password: hashedPassword,
       nombre,
       telefono,
-      nombreNino, 
+      nombreNino,
       fechaCreacion: new Date(),
       verificado: false
     });
 
     const userId = insertResult.insertedId;
-
     const verificationToken = jwt.sign({ id: userId }, jwtSecret, { expiresIn: '1d' });
 
+    // ✅ Actualización extra para agregar `_id_usuario` junto con el token
     await users.updateOne(
       { _id: userId },
-      { $set: { token: verificationToken } }
+      {
+        $set: {
+          token: verificationToken,
+          _id_usuario: userId // este campo tendrá el mismo ObjectId que `_id`
+        }
+      }
     );
 
     const transporter = nodemailer.createTransport({
@@ -100,7 +102,6 @@ module.exports = async function (context, req) {
     });
 
     const verificationLink = `https://kadal-functions-app.azurewebsites.net/api/verifyemail?token=${verificationToken}`;
-
 
     const mailOptions = {
       from: senderEmail,

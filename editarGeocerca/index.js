@@ -1,8 +1,9 @@
 const { MongoClient, ObjectId } = require("mongodb");
-
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
+  console.log(" Editar geocerca: request body ->", req.body);
+
   if (req.method !== "PUT") {
     context.res = {
       status: 405,
@@ -38,12 +39,14 @@ module.exports = async function (context, req) {
     if (nombre) updateFields.nombre = nombre;
     if (typeof radio !== "undefined") updateFields.radio = parseInt(radio);
 
-    console.log("🛠️ Actualizando geocerca:", _id, updateFields);
+    console.log("🛠️ Actualizando:", _id, "con:", updateFields);
 
     const result = await geocercas.updateOne(
       { _id: new ObjectId(_id) },
       { $set: updateFields }
     );
+
+    console.log("🔧 Resultado updateOne:", result);
 
     if (result.modifiedCount === 0) {
       context.res = {
@@ -59,7 +62,7 @@ module.exports = async function (context, req) {
 
     await client.close();
   } catch (error) {
-    console.error("❌ Error al actualizar geocerca:", error);
+    console.error("Error al actualizar:", error);
     context.res = {
       status: 500,
       body: { message: "Error al actualizar geocerca", error: error.message },

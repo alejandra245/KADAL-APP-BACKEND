@@ -7,8 +7,8 @@ const uri = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 module.exports = async function (context, req) {
-  context.log("🌍 MONGO_URI:", process.env.MONGO_URI);
-  context.log("🔐 JWT_SECRET:", process.env.JWT_SECRET);
+  context.log(" MONGO_URI:", process.env.MONGO_URI);
+  context.log(" JWT_SECRET:", process.env.JWT_SECRET);
 
   if (req.method !== "POST") {
     context.res = {

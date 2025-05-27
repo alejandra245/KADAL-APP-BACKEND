@@ -27,13 +27,16 @@ module.exports = async function (context, req) {
     const db = client.db("kadalDB");
     const contactos = db.collection("contacts");
 
+    const fechaActual = new Date().toISOString(); 
+
     await contactos.insertOne({
       _id_contacto,
       _id_usuario,
       _id_kadal,
       nombre,
       numero_telefonico,
-      fechaCreacion: new Date()
+      fechaCreacion: fechaActual,
+      fechaActualizacion: fechaActual
     });
 
     context.res = {

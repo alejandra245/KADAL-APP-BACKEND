@@ -30,14 +30,15 @@ module.exports = async function (context, req) {
 
     const nuevaGeocerca = {
       _id_geocerca: uuidv4(),
-      _id_usuario: new ObjectId(userId),  // <--- corrección clave
+      _id_usuario: new ObjectId(userId),  
       nombre,
       centro: {
         latitud: parseFloat(centro.latitud),
         longitud: parseFloat(centro.longitud),
       },
       radio: parseInt(radio),
-      fechaCreacion: new Date(),
+      fechaCreacion: new Date().toISOString(),
+
     };
 
     await geocercas.insertOne(nuevaGeocerca);

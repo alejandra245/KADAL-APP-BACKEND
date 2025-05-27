@@ -1,0 +1,13 @@
+{
+  "bindings": [
+    {
+      "type": "eventHubTrigger",
+      "name": "IoTHubMessage",
+      "direction": "in",
+      "eventHubName": "iothub-ehub-kadal-64425081-a7dec7816d",
+      "connection": "EVENT_HUB_CONNECTION",
+      "cardinality": "many",
+      "consumerGroup": "$Default"
+    }
+  ]
+}

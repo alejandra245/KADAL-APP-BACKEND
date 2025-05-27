@@ -36,7 +36,7 @@ module.exports = async function (context, req) {
           numero_telefonico,
           _id_usuario,
           _id_kadal,
-          fechaActualizacion: new Date()
+          fechaActualizacion: new Date().toISOString()  // Aquí el cambio
         }
       }
     );
