@@ -1,55 +1,36 @@
-const { MongoClient, ObjectId } = require("mongodb");
-const uri = process.env.MONGO_URI;
+const { client, databaseId, containerId } = require("../../cosmosClient");
 
 module.exports = async function (context, req) {
-  if (req.method !== "POST") {
-    context.res = {
-      status: 405,
-      body: "Método no permitido",
-    };
-    return;
-  }
-
-  const { userId, kadalId } = req.body;
-
-  if (!userId || !kadalId) {
-    context.res = {
-      status: 400,
-      body: "Faltan userId o kadalId",
-    };
-    return;
-  }
-
-  const client = new MongoClient(uri);
-
   try {
-    await client.connect();
-    const db = client.db("kadalDB");
-    const users = db.collection("users");
+    const { id_usuario } = req.body;
 
-    const result = await users.updateOne(
-      { _id: new ObjectId(userId) },
-      { $set: { dispositivo_kadal: kadalId } }
-    );
-
-    if (result.modifiedCount === 1) {
+    if (!id_usuario) {
       context.res = {
-        status: 200,
-        body: "Dispositivo KADAL vinculado correctamente.",
+        status: 400,
+        body: { message: "Falta el campo obligatorio: id_usuario" },
       };
-    } else {
-      context.res = {
-        status: 404,
-        body: "Usuario no encontrado o ya vinculado.",
-      };
+      return;
     }
+
+    const jsonParcial = {
+      _id_usuario: id_usuario,
+      estado_boton_emergencia: false,
+      ble: {
+        service_uuid: "ec5f3f14-b07e-410c-aedb-0bdc6279f29a",
+        characteristic_uuid: "91a6007a-bd54-4cf6-aeca-812bcabfc41f",
+        device_name: "KADAL-BLE"
+      }
+    };
+
+    context.res = {
+      status: 200,
+      body: jsonParcial
+    };
   } catch (error) {
-    context.log("Error:", error);
+    context.log("❌ Error al generar JSON de vinculación:", error.message);
     context.res = {
       status: 500,
-      body: "Error al vincular dispositivo.",
+      body: { message: "Error al generar JSON de vinculación" }
     };
-  } finally {
-    await client.close();
   }
 };
