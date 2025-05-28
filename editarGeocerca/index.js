@@ -1,4 +1,4 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
@@ -22,14 +22,6 @@ module.exports = async function (context, req) {
     return;
   }
 
-  if (!ObjectId.isValid(_id)) {
-    context.res = {
-      status: 400,
-      body: { message: "ID de geocerca inválido" },
-    };
-    return;
-  }
-
   try {
     const client = await MongoClient.connect(uri);
     const db = client.db("kadalDB");
@@ -42,7 +34,7 @@ module.exports = async function (context, req) {
     console.log("🛠️ Actualizando:", _id, "con:", updateFields);
 
     const result = await geocercas.updateOne(
-      { _id: new ObjectId(_id) },
+      { _id },
       { $set: updateFields }
     );
 

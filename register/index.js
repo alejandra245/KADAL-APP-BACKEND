@@ -2,6 +2,7 @@ const { MongoClient } = require("mongodb");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+const { v4: uuidv4 } = require("uuid");
 
 const uri = process.env.MONGO_URI;
 const jwtSecret = process.env.JWT_SECRET;
@@ -69,29 +70,24 @@ module.exports = async function (context, req) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const insertResult = await users.insertOne({
+    const _id_usuario = uuidv4(); // ✅ ahora usamos UUID como _id_usuario
+
+    const userData = {
+      _id_usuario,          // será el ID principal (string)
       email,
       password: hashedPassword,
       nombre,
       telefono,
       nombreNino,
-      fechaCreacion: new Date(),
-      verificado: false
-    });
+      verificado: false,
+      fechaCreacion: new Date()
+    };
 
-    const userId = insertResult.insertedId;
-    const verificationToken = jwt.sign({ id: userId }, jwtSecret, { expiresIn: '1d' });
+    const verificationToken = jwt.sign({ id: _id_usuario }, jwtSecret, { expiresIn: '1d' });
 
-    // ✅ Actualización extra para agregar `_id_usuario` junto con el token
-    await users.updateOne(
-      { _id: userId },
-      {
-        $set: {
-          token: verificationToken,
-          _id_usuario: userId // este campo tendrá el mismo ObjectId que `_id`
-        }
-      }
-    );
+    userData.token = verificationToken;
+
+    await users.insertOne(userData);
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',

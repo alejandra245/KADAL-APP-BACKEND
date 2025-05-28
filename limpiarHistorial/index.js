@@ -1,4 +1,4 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
@@ -12,10 +12,10 @@ module.exports = async function (context, req) {
 
   const { userId, kadalId } = req.query;
 
-  if (!userId || !ObjectId.isValid(userId) || !kadalId) {
+  if (!userId || !kadalId) {
     context.res = {
       status: 400,
-      body: { message: "Parámetros 'userId' o 'kadalId' inválidos o faltantes" },
+      body: { message: "Parámetros 'userId' o 'kadalId' faltantes" },
     };
     return;
   }
@@ -27,8 +27,9 @@ module.exports = async function (context, req) {
     const configuracion = db.collection("configuracionHistorial");
     const historial = db.collection("ubicaciones");
 
+    // Buscar configuración sin usar ObjectId
     const config = await configuracion.findOne({
-      _id_usuario: new ObjectId(userId),
+      _id_usuario: userId,
       _id_kadal: kadalId,
     });
 
@@ -45,7 +46,7 @@ module.exports = async function (context, req) {
     fechaLimite.setDate(fechaLimite.getDate() - dias);
 
     const resultado = await historial.deleteMany({
-      _id_usuario: new ObjectId(userId),
+      _id_usuario: userId,
       _id_kadal: kadalId,
       fecha: { $lt: fechaLimite },
     });
@@ -53,7 +54,7 @@ module.exports = async function (context, req) {
     context.res = {
       status: 200,
       body: {
-        message: ` Se eliminaron ${resultado.deletedCount} registros anteriores a ${dias} días`,
+        message: `Se eliminaron ${resultado.deletedCount} registros anteriores a ${dias} días`,
       },
     };
 
@@ -62,7 +63,7 @@ module.exports = async function (context, req) {
     context.res = {
       status: 500,
       body: {
-        message: " Error al limpiar historial",
+        message: "Error al limpiar historial",
         error: error.message,
       },
     };

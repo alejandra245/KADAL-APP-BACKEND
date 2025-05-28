@@ -1,6 +1,5 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const jwt = require("jsonwebtoken");
-//nst bcrypt = require("bcrypt");
 const bcrypt = require("bcryptjs");
 
 const uri = process.env.MONGO_URI;
@@ -28,7 +27,7 @@ module.exports = async function (context, req) {
   try {
     // Verificamos token
     const decoded = jwt.verify(token, JWT_SECRET);
-    const userId = decoded.id;
+    const userId = decoded.id;  // Ahora es un string, no un ObjectId
 
     // Validamos nueva contraseña
     if (newPassword.length < 8) {
@@ -47,8 +46,8 @@ module.exports = async function (context, req) {
     const users = db.collection("users");
 
     const result = await users.updateOne(
-      { _id: new ObjectId(userId) },
-      { $set: { password: hashedPassword } }
+      { _id_usuario: userId }, // ✅ buscamos por el campo string
+      { $set: { password: hashedPassword, isTempPassword: false } }
     );
 
     if (result.modifiedCount === 1) {

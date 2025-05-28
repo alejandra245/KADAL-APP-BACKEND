@@ -56,7 +56,7 @@ module.exports = async function (context, req) {
 
     await users.updateOne(
       { email },
-      { $set: { password: hashedPassword } }
+      { $set: { password: hashedPassword, isTempPassword: true } } // ✅ Marca como temporal
     );
 
     const transporter = nodemailer.createTransport({

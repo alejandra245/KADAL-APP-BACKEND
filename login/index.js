@@ -62,10 +62,15 @@ module.exports = async function (context, req) {
     }
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, nombre: user.nombre },
+      {
+        id: user._id.toString(), // <- aquí el cambio
+        email: user.email,
+        nombre: user.nombre
+      },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
+    
 
     context.res = {
       status: 200,
@@ -74,8 +79,8 @@ module.exports = async function (context, req) {
         token,
         nombre: user.nombre,
         nombreNino: user.nombreNino,
-        id: user._id,
-        isTempPassword: !!user.isTempPassword  // Agregar esta propiedad
+        _id_usuario: user._id.toString(),
+        isTempPassword: !!user.isTempPassword  
       }
     };
 

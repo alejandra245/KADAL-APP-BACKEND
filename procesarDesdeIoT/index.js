@@ -1,4 +1,4 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 
 const uri = process.env.MONGO_URI;
 
@@ -12,8 +12,8 @@ module.exports = async function (context, IoTHubMessages) {
     for (const msg of IoTHubMessages) {
       const data = msg.body || msg;
 
-      // Asegurar ObjectId y fecha válida
-      const userId = data._id_usuario ? new ObjectId(data._id_usuario) : null;
+      //  Mantener userId como string
+      const userId = data._id_usuario || null;
       const fecha = data.fecha ? new Date(data.fecha) : new Date();
 
       if (data._id_ubicacion) {
@@ -22,7 +22,7 @@ module.exports = async function (context, IoTHubMessages) {
           _id_usuario: userId,
           fecha,
         });
-        context.log(`📍 Ubicación registrada: ${data._id_ubicacion}`);
+        context.log(` Ubicación registrada: ${data._id_ubicacion}`);
       
       } else if (data._id_notificacion) {
         await db.collection("notificaciones").insertOne({
@@ -30,7 +30,7 @@ module.exports = async function (context, IoTHubMessages) {
           _id_usuario: userId,
           fecha,
         });
-        context.log(`🔔 Notificación registrada: ${data._id_notificacion}`);
+        context.log(` Notificación registrada: ${data._id_notificacion}`);
       
       } else if (data._id_llamada) {
         await db.collection("llamadas").insertOne({
@@ -38,15 +38,15 @@ module.exports = async function (context, IoTHubMessages) {
           _id_usuario: userId,
           fecha,
         });
-        context.log(`📞 Llamada registrada: ${data._id_llamada}`);
+        context.log(` Llamada registrada: ${data._id_llamada}`);
       
       } else {
-        context.log.warn("⚠️ Mensaje no reconocido:", data);
+        context.log.warn(" Mensaje no reconocido:", data);
       }
     }
 
   } catch (err) {
-    context.log.error("❌ Error al procesar datos desde IoT:", err);
+    context.log.error(" Error al procesar datos desde IoT:", err);
   } finally {
     await client.close();
   }

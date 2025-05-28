@@ -14,9 +14,9 @@ module.exports = async function (context, myTimer) {
       fecha: { $lt: sieteDiasAtras },
     });
 
-    context.log(`🧹 Notificaciones eliminadas: ${resultado.deletedCount}`);
+    context.log(` Notificaciones eliminadas: ${resultado.deletedCount}`);
     await client.close();
   } catch (err) {
-    context.log.error("❌ Error limpiando notificaciones:", err.message);
+    context.log.error(" Error limpiando notificaciones:", err.message);
   }
 };

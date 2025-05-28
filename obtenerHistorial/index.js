@@ -1,4 +1,4 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 
 const uri = process.env.MONGO_URI;
 
@@ -22,14 +22,6 @@ module.exports = async function (context, req) {
     return;
   }
 
-  if (!ObjectId.isValid(userId)) {
-    context.res = {
-      status: 400,
-      body: { message: "El userId no es un ObjectId válido" },
-    };
-    return;
-  }
-
   try {
     const client = await MongoClient.connect(uri);
     const db = client.db("kadalDB");
@@ -39,7 +31,7 @@ module.exports = async function (context, req) {
 
     const config = await configuracion.findOne({
       _id_kadal: kadalId,
-      _id_usuario: new ObjectId(userId),
+      _id_usuario: userId, // ← ya no usamos ObjectId
     });
 
     const dias = config?.dias || 7;
@@ -50,7 +42,7 @@ module.exports = async function (context, req) {
     const ubicaciones = await historial
       .find({
         _id_kadal: kadalId,
-        _id_usuario: new ObjectId(userId),
+        _id_usuario: userId, // ← igual aquí
         latitud: { $ne: "" },
         longitud: { $ne: "" },
         fecha: { $gte: fechaLimite },

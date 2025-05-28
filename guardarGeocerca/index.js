@@ -1,4 +1,4 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const { v4: uuidv4 } = require("uuid"); 
 const uri = process.env.MONGO_URI;
 
@@ -30,7 +30,7 @@ module.exports = async function (context, req) {
 
     const nuevaGeocerca = {
       _id_geocerca: uuidv4(),
-      _id_usuario: new ObjectId(userId),  
+      _id_usuario: userId,  // ✅ Usamos el string directamente
       nombre,
       centro: {
         latitud: parseFloat(centro.latitud),
@@ -38,7 +38,6 @@ module.exports = async function (context, req) {
       },
       radio: parseInt(radio),
       fechaCreacion: new Date().toISOString(),
-
     };
 
     await geocercas.insertOne(nuevaGeocerca);

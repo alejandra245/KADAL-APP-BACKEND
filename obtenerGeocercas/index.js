@@ -1,4 +1,4 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 
 const uri = process.env.MONGO_URI;
 
@@ -13,7 +13,7 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const client = new MongoClient(uri); // sin `useNewUrlParser` ni `useUnifiedTopology` (ya no son necesarios)
+  const client = new MongoClient(uri);
 
   try {
     await client.connect();
@@ -21,7 +21,7 @@ module.exports = async function (context, req) {
     const collection = db.collection("geocercas");
 
     const geocercas = await collection
-      .find({ _id_usuario: new ObjectId(userId) })
+      .find({ _id_usuario: userId }) // ← aquí ya usamos solo el string
       .toArray();
 
     context.res = {

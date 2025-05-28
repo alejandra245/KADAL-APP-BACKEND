@@ -1,8 +1,8 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
-  console.log(" Eliminar geocerca: query ->", req.query);
+  console.log("Eliminar geocerca: query ->", req.query);
 
   if (req.method !== "DELETE") {
     context.res = {
@@ -14,10 +14,10 @@ module.exports = async function (context, req) {
 
   const { _id } = req.query;
 
-  if (!_id || !ObjectId.isValid(_id)) {
+  if (!_id) {
     context.res = {
       status: 400,
-      body: { message: "ID de la geocerca inválido o faltante" },
+      body: { message: "Falta el ID de la geocerca" },
     };
     return;
   }
@@ -27,11 +27,11 @@ module.exports = async function (context, req) {
     const db = client.db("kadalDB");
     const geocercas = db.collection("geocercas");
 
-    console.log(" Intentando eliminar geocerca con ID:", _id);
+    console.log("Intentando eliminar geocerca con ID:", _id);
 
-    const result = await geocercas.deleteOne({ _id: new ObjectId(_id) });
+    const result = await geocercas.deleteOne({ _id });
 
-    console.log(" Resultado deleteOne:", result);
+    console.log("Resultado deleteOne:", result);
 
     if (result.deletedCount === 0) {
       context.res = {
@@ -47,7 +47,7 @@ module.exports = async function (context, req) {
 
     await client.close();
   } catch (error) {
-    console.error(" Error al eliminar:", error);
+    console.error("Error al eliminar:", error);
     context.res = {
       status: 500,
       body: { message: "Error al eliminar geocerca", error: error.message },

@@ -1,5 +1,4 @@
-const { MongoClient, ObjectId } = require("mongodb");
-//nst bcrypt = require("bcrypt");
+const { MongoClient } = require("mongodb");
 const bcrypt = require("bcryptjs");
 
 const uri = process.env.MONGO_URI;
@@ -15,7 +14,6 @@ module.exports = async function (context, req) {
 
   const { userId, nombre, email, telefono, password } = req.body;
 
-  // Validar que se incluya al menos el userId
   if (!userId) {
     context.res = {
       status: 400,
@@ -24,7 +22,6 @@ module.exports = async function (context, req) {
     return;
   }
 
-  // Validar que al menos un campo venga para actualizar
   if (!nombre && !email && !telefono && !password) {
     context.res = {
       status: 400,
@@ -41,7 +38,6 @@ module.exports = async function (context, req) {
     const users = db.collection("users");
 
     const updateData = {};
-
     if (nombre) updateData.nombre = nombre;
     if (email) updateData.email = email;
     if (telefono) updateData.telefono = telefono;
@@ -53,12 +49,11 @@ module.exports = async function (context, req) {
         };
         return;
       }
-      const hashedPassword = await bcrypt.hash(password, 10);
-      updateData.password = hashedPassword;
+      updateData.password = await bcrypt.hash(password, 10);
     }
 
     const result = await users.updateOne(
-      { _id: new ObjectId(userId) },
+      { _id: userId }, // ya no se usa ObjectId
       { $set: updateData }
     );
 

@@ -29,7 +29,7 @@ module.exports = async function (context, req) {
     await configuracion.updateOne(
       {
         _id_kadal,
-        _id_usuario: new ObjectId(_id_usuario),
+        _id_usuario,
       },
       {
         $set: { dias },

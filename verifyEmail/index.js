@@ -1,4 +1,4 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const jwt = require("jsonwebtoken");
 
 const uri = process.env.MONGO_URI;
@@ -17,15 +17,15 @@ module.exports = async function (context, req) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const userId = decoded.id;
+    const userId = decoded.id; // ya es un string
 
     const client = new MongoClient(uri);
     await client.connect();
     const db = client.db("kadalDB");
     const users = db.collection("users");
 
-    // Buscamos que el usuario tenga ese token (esto evita que alguien reutilice un token inválido)
-    const user = await users.findOne({ _id: new ObjectId(userId), token });
+    // Buscar por _id_usuario en lugar de _id
+    const user = await users.findOne({ _id_usuario: userId, token });
 
     if (!user) {
       context.res = {
@@ -44,7 +44,7 @@ module.exports = async function (context, req) {
     }
 
     const result = await users.updateOne(
-      { _id: new ObjectId(userId) },
+      { _id_usuario: userId },
       { $set: { verificado: true }, $unset: { token: "" } }
     );
 

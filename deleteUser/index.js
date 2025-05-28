@@ -28,7 +28,7 @@ module.exports = async function (context, req) {
 
     // Eliminar el usuario
     const userResult = await db.collection("users").deleteOne({
-      _id: new ObjectId(userId),
+      _id: userId,
     });
 
     if (userResult.deletedCount === 0) {

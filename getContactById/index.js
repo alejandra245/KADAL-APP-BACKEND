@@ -1,4 +1,4 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
@@ -19,7 +19,7 @@ module.exports = async function (context, req) {
     const db = client.db("kadalDB");
     const contactos = db.collection("contacts");
 
-    const contacto = await contactos.findOne({ _id: new ObjectId(contactId) });
+    const contacto = await contactos.findOne({ _id: contactId });
 
     if (!contacto) {
       context.res = {
