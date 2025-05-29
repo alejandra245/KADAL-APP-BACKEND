@@ -12,12 +12,12 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const { userId, newPassword } = req.body;
+  const {  _id_usuario, newPassword } = req.body;
 
-  if (!userId || !newPassword) {
+  if (!_id_usuario|| !newPassword) {
     context.res = {
       status: 400,
-      body: { message: "Faltan campos obligatorios (userId y newPassword)" },
+      body: { message: "Faltan campos obligatorios (_id_usuario y newPassword)" },
     };
     return;
   }
@@ -31,7 +31,7 @@ module.exports = async function (context, req) {
     const users = db.collection("users");
 
     const result = await users.updateOne(
-      { _id_usuario: userId },
+        { _id_usuario },
       { $set: { password: hashedPassword, isTempPassword: false } }
     );
 
