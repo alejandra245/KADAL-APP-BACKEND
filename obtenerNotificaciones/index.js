@@ -25,13 +25,13 @@ module.exports = async function (context, req) {
     const db = client.db("kadalDB");
     const notificacionesCol = db.collection("notificaciones");
 
-    // 🔁 Buscar por ID string (sin usar ObjectId)
+    //  Buscar por ID string (sin usar ObjectId)
     const notificaciones = await notificacionesCol
       .find({ _id_usuario: userId })
       .sort({ _id_notificacion: 1 })
       .toArray();
 
-    // 🔄 Convertir fechas a ISO
+    //  Convertir fechas a ISO
     const notificacionesConFechaISO = notificaciones.map(n => ({
       ...n,
       fecha: n.fecha instanceof Date ? n.fecha.toISOString() : n.fecha,
