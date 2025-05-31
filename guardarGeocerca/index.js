@@ -1,5 +1,6 @@
+const axios = require("axios");
 const { MongoClient } = require("mongodb");
-const { v4: uuidv4 } = require("uuid"); 
+const { v4: uuidv4 } = require("uuid");
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
@@ -42,15 +43,23 @@ module.exports = async function (context, req) {
 
     await geocercas.insertOne(nuevaGeocerca);
 
+    try {
+      await axios.post(process.env.URL_ENVIAR_IOT_HUB, nuevaGeocerca);
+    } catch (axiosError) {
+      context.log.warn("No se pudo enviar la geocerca al dispositivo:", axiosError.message);
+    }
+
+
     context.res = {
       status: 201,
       body: "Geocerca guardada correctamente",
     };
   } catch (error) {
-    context.log("Error al guardar geocerca:", error);
+    context.log.error("Error al guardar geocerca:", error.message);
+    context.log.error("Stack trace:", error.stack);
     context.res = {
       status: 500,
-      body: "Error al guardar la geocerca",
+      body: `Error al guardar la geocerca: ${error.message}`
     };
   } finally {
     await client.close();
