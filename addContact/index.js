@@ -1,3 +1,4 @@
+const axios = require("axios");
 const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
@@ -27,9 +28,9 @@ module.exports = async function (context, req) {
     const db = client.db("kadalDB");
     const contactos = db.collection("contacts");
 
-    const fechaActual = new Date().toISOString(); 
+    const fechaActual = new Date().toISOString();
 
-    await contactos.insertOne({
+    const nuevoContacto = {
       _id_contacto,
       _id_usuario,
       _id_kadal,
@@ -37,7 +38,21 @@ module.exports = async function (context, req) {
       numero_telefonico,
       fechaCreacion: fechaActual,
       fechaActualizacion: fechaActual
-    });
+    };
+
+    await contactos.insertOne(nuevoContacto);
+
+    try {
+      const payload = {
+        accion: "nuevoCtcEmg",
+        ctcEmg: nuevoContacto
+      };
+
+      await axios.post(process.env.URL_ENVIAR_IOT_HUB, payload);
+      context.log(" Contacto enviado al dispositivo:", nuevoContacto._id_contacto);
+    } catch (axiosError) {
+      context.log.warn("No se pudo enviar el contacto de emergencia al dispositivo:", axiosError.message);
+    }
 
     context.res = {
       status: 201,
