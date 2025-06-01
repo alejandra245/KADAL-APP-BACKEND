@@ -1,4 +1,5 @@
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
+const axios = require("axios");
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
@@ -27,16 +28,42 @@ module.exports = async function (context, req) {
     const db = client.db("kadalDB");
     const geocercas = db.collection("geocercas");
 
-    console.log("Intentando eliminar geocerca con ID:", _id);
+    // 1️⃣ Buscar la geocerca antes de eliminarla
+    const geocerca = await geocercas.findOne({ _id: new ObjectId(_id) });
 
-    const result = await geocercas.deleteOne({ _id });
+    if (!geocerca) {
+      context.res = {
+        status: 404,
+        body: { message: "Geocerca no encontrada" },
+      };
+      return;
+    }
 
+    // 2️⃣ Enviar la geocerca al ESP32
+    try {
+      const payload = {
+        accion: "eliminarGeocerca",
+        geocerca: {
+          _id_usuario: geocerca._id_usuario,
+          _id_geocerca: geocerca._id_geocerca
+        }
+      };
+
+      await axios.post(process.env.URL_ENVIAR_IOT_HUB, payload);
+      context.log("✅ Geocerca enviada al dispositivo:", payload.geocerca._id_geocerca);
+    } catch (axiosError) {
+      context.log.warn("No se pudo enviar la geocerca eliminada al dispositivo:", axiosError.message);
+      // ❗️ Puedes decidir abortar aquí o continuar. Yo sugiero continuar para no bloquear la eliminación
+    }
+
+    // 3️⃣ Ahora sí, eliminar la geocerca de la base de datos
+    const result = await geocercas.deleteOne({ _id: new ObjectId(_id) });
     console.log("Resultado deleteOne:", result);
 
     if (result.deletedCount === 0) {
       context.res = {
         status: 404,
-        body: { message: "Geocerca no encontrada" },
+        body: { message: "La geocerca no pudo eliminarse (ya no existe)" },
       };
     } else {
       context.res = {

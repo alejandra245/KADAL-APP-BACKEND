@@ -1,8 +1,9 @@
-const { MongoClient } = require("mongodb");
+const axios = require("axios");
+const { MongoClient, ObjectId } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
 module.exports = async function (context, req) {
-  console.log(" Editar geocerca: request body ->", req.body);
+  console.log("Editar geocerca: request body ->", req.body);
 
   if (req.method !== "PUT") {
     context.res = {
@@ -33,24 +34,61 @@ module.exports = async function (context, req) {
 
     console.log("🛠️ Actualizando:", _id, "con:", updateFields);
 
-    const result = await geocercas.updateOne(
-      { _id },
+    const objectId = new ObjectId(_id);
+
+    const updateResult = await geocercas.updateOne(
+      { _id: objectId },
       { $set: updateFields }
     );
 
-    console.log("🔧 Resultado updateOne:", result);
+    console.log("🔧 Resultado updateOne:", updateResult);
 
-    if (result.modifiedCount === 0) {
+    if (updateResult.matchedCount === 0) {
       context.res = {
         status: 404,
-        body: { message: "No se encontró la geocerca o no hubo cambios" },
+        body: { message: "No se encontró la geocerca" },
       };
-    } else {
-      context.res = {
-        status: 200,
-        body: { message: "Geocerca actualizada correctamente" },
-      };
+      await client.close();
+      return;
     }
+
+    // 🔍 Buscar el documento actualizado (así nos aseguramos de obtener todos los campos)
+    const geocercaActualizada = await geocercas.findOne({ _id: objectId });
+
+    if (!geocercaActualizada) {
+      context.res = {
+        status: 404,
+        body: { message: "No se encontró la geocerca actualizada" },
+      };
+      await client.close();
+      return;
+    }
+
+    // Preparar el JSON para el ESP32
+    const geocercaEditada = {
+      _id_geocerca: geocercaActualizada._id_geocerca || "",
+      _id_usuario: geocercaActualizada._id_usuario || "",
+      nombre: geocercaActualizada.nombre || "",
+      centro: geocercaActualizada.centro || {},
+      radio: geocercaActualizada.radio || 0
+    };
+
+    try {
+      const payload = {
+        accion: "editarGeocerca",
+        geocerca: geocercaEditada
+      };
+
+      await axios.post(process.env.URL_ENVIAR_IOT_HUB, payload);
+      context.log("Geocerca editada enviada al dispositivo:", geocercaEditada._id_geocerca);
+    } catch (axiosError) {
+      context.log.warn("No se pudo enviar la geocerca editada al dispositivo:", axiosError.message);
+    }
+
+    context.res = {
+      status: 200,
+      body: { message: "Geocerca actualizada correctamente" },
+    };
 
     await client.close();
   } catch (error) {

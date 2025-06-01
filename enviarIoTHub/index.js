@@ -1,16 +1,25 @@
 const iothub = require("azure-iothub");
-const { Message } = require("azure-iot-common");  // 🟢 Aquí importa Message correctamente
+const { Message } = require("azure-iot-common");
 
 const iothubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
-const deviceId = "KADALESP32";  // Ajusta el ID real de tu dispositivo
+const deviceId = "KADALESP32";  // Ajusta tu Device ID real
 
 module.exports = async function (context, req) {
-  const geocerca = req.body;
+  const accion = req.body.accion;
+  const geocerca = req.body.geocerca;
+
+  if (!accion || !geocerca) {
+    context.res = {
+      status: 400,
+      body: "Faltan campos obligatorios: 'accion' y 'geocerca'."
+    };
+    return;
+  }
 
   const serviceClient = iothub.Client.fromConnectionString(iothubConnectionString);
 
   const payload = {
-    accion: "nuevaGeocerca",
+    accion,
     geocerca
   };
 
@@ -21,14 +30,14 @@ module.exports = async function (context, req) {
     mensaje.contentEncoding = "utf-8";
 
     await serviceClient.send(deviceId, mensaje);
-    context.log("✅ Geocerca enviada al dispositivo:", geocerca._id_geocerca);
+    context.log(`✅ Acción "${accion}" enviada al dispositivo:`, geocerca._id_geocerca);
 
     context.res = {
       status: 200,
-      body: "Geocerca enviada al dispositivo correctamente"
+      body: `Acción "${accion}" enviada al dispositivo correctamente`
     };
   } catch (err) {
-    context.log.error("❌ Error al enviar geocerca:", err.message);
+    context.log.error("Error al enviar geocerca:", err.message);
     context.res = {
       status: 500,
       body: `Error al enviar la geocerca: ${err.message}`

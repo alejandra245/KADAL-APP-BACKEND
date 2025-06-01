@@ -44,11 +44,15 @@ module.exports = async function (context, req) {
     await geocercas.insertOne(nuevaGeocerca);
 
     try {
-      await axios.post(process.env.URL_ENVIAR_IOT_HUB, nuevaGeocerca);
+      const payload = {
+        accion: "nuevaGeocerca",
+        geocerca: nuevaGeocerca
+      };
+
+      await axios.post(process.env.URL_ENVIAR_IOT_HUB, payload);
     } catch (axiosError) {
       context.log.warn("No se pudo enviar la geocerca al dispositivo:", axiosError.message);
     }
-
 
     context.res = {
       status: 201,
