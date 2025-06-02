@@ -6,14 +6,16 @@ const deviceId = "KADALESP32";
 module.exports = async function (context, req) {
   const accion = req.body.accion;
   
-  // Puede ser "geocerca" o "ctcEmg" (contacto de emergencia)
+  // Puede ser "geocerca" o "ctcEmg" o "ctcTut"
   const geocerca = req.body.geocerca;
   const ctcEmg = req.body.ctcEmg;
+  const ctcTut = req.body.ctcTut;
+  const _id_usuario = req.body._id_usuario; 
 
-  if (!accion || (!geocerca && !ctcEmg)) {
+  if (!accion || (!geocerca && !ctcEmg && !ctcTut && !_id_usuario)) {
     context.res = {
       status: 400,
-      body: "Faltan campos obligatorios: 'accion' y al menos uno de 'geocerca' o 'ctcEmg'."
+      body: "Faltan campos obligatorios: 'accion' y al menos uno de 'geocerca', 'ctcEmg', 'ctcTut' o '_id_usuario'."
     };
     return;
   }
@@ -30,6 +32,14 @@ module.exports = async function (context, req) {
 
   if (ctcEmg) {
     payload.ctcEmg = ctcEmg;
+  }
+
+  if (ctcTut) {
+    payload.ctcTut = ctcTut;
+  }
+
+  if (_id_usuario) {
+    payload._id_usuario = _id_usuario;
   }
 
   try {

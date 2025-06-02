@@ -1,3 +1,4 @@
+const axios = require("axios");
 const { MongoClient, ObjectId } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
@@ -25,6 +26,27 @@ module.exports = async function (context, req) {
   try {
     await client.connect();
     const db = client.db("kadalDB");
+
+    // Obtener el usuario antes de borrarlo
+    const usuario = await db.collection("users").findOne({
+      _id: new ObjectId(userId),
+    });
+
+    if (usuario) {
+      // Preparar y enviar la orden al ESP32
+      const payload = {
+        accion: "eliminarVinculacion",
+        _id_usuario: usuario._id.toString() 
+      };
+
+      try {
+        await axios.post(process.env.URL_ENVIAR_IOT_HUB, payload);
+        context.log("Orden de eliminación enviada al ESP32:", payload._id_usuario);
+      } catch (axiosError) {
+        context.log.warn("No se pudo enviar la orden de eliminación al ESP32:", axiosError.message);
+        // Puedes decidir abortar aquí si lo deseas, pero como pediste mantener la lógica, continuamos.
+      }
+    }
 
     // Eliminar el usuario
     const userResult = await db.collection("users").deleteOne({
