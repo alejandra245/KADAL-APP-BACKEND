@@ -10,12 +10,13 @@ module.exports = async function (context, req) {
   const geocerca = req.body.geocerca;
   const ctcEmg = req.body.ctcEmg;
   const ctcTut = req.body.ctcTut;
-  const _id_usuario = req.body._id_usuario; 
+  const _id_usuario = req.body._id_usuario;
+  const kadal = req.body.kadal; 
 
-  if (!accion || (!geocerca && !ctcEmg && !ctcTut && !_id_usuario)) {
+  if (!accion || (!geocerca && !ctcEmg && !ctcTut && !_id_usuario && !kadal)) {
     context.res = {
       status: 400,
-      body: "Faltan campos obligatorios: 'accion' y al menos uno de 'geocerca', 'ctcEmg', 'ctcTut' o '_id_usuario'."
+      body: "Faltan campos obligatorios: 'accion' y al menos uno de 'geocerca', 'ctcEmg', 'ctcTut' o '_id_usuario' o 'kadal'."
     };
     return;
   }
@@ -40,6 +41,10 @@ module.exports = async function (context, req) {
 
   if (_id_usuario) {
     payload._id_usuario = _id_usuario;
+  }
+
+  if (kadal) {
+    payload.kadal = kadal;
   }
 
   try {
