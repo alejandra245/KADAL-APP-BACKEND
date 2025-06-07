@@ -20,36 +20,67 @@ module.exports = async function (context, req) {
     return;
   }
 
-  try {
-    const client = await MongoClient.connect(uri);
-    const db = client.db("kadalDB");
-    const notificacionesCol = db.collection("notificaciones");
+  let client;
 
-    //  Buscar por ID string (sin usar ObjectId)
-    const notificaciones = await notificacionesCol
+  try {
+    client = await MongoClient.connect(uri);
+    const db = client.db("kadalDB");
+
+    // Obtener notificaciones
+    const notificaciones = await db
+      .collection("notificaciones")
       .find({ _id_usuario: userId })
-      .sort({ _id_notificacion: 1 })
       .toArray();
 
-    //  Convertir fechas a ISO
-    const notificacionesConFechaISO = notificaciones.map(n => ({
+    const notificacionesConTipo = notificaciones.map(n => ({
       ...n,
-      fecha: n.fecha instanceof Date ? n.fecha.toISOString() : n.fecha,
+      tipo: n.tipo || "notificacion",
+      mensaje: n.mensaje || "",
+      fecha: n.fecha instanceof Date
+        ? n.fecha.toISOString()
+        : n.fecha,
     }));
+
+    // Obtener llamadas
+    const llamadas = await db
+      .collection("llamadas")
+      .find({ _id_usuario: userId })
+      .toArray();
+
+    const llamadasConTipo = llamadas.map(l => {
+      // Definir mensaje dinámico según tipo_llamada
+      let mensaje = "Se realizó una llamada.";
+      if (l.tipo_llamada && l.tipo_llamada.toLowerCase() === "entrante") {
+        mensaje = "Se recibió una llamada.";
+      }
+      return {
+        ...l,
+        tipo: "llamada",  //  se agrega para que el frontend lo pinte
+        mensaje: mensaje,
+        fecha: l.fecha instanceof Date
+          ? l.fecha.toISOString()
+          : l.fecha,
+      };
+    });
+
+    // Combinar y ordenar
+    const eventos = [...notificacionesConTipo, ...llamadasConTipo];
+    eventos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
     context.res = {
       status: 200,
-      body: notificacionesConFechaISO,
+      body: eventos,
     };
 
-    client.close();
   } catch (error) {
     context.res = {
       status: 500,
       body: {
-        message: "Error al obtener notificaciones",
+        message: "Error al obtener eventos",
         error: error.message,
       },
     };
+  } finally {
+    if (client) await client.close();
   }
 };
