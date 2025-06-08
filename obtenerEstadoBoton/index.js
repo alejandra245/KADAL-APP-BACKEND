@@ -23,8 +23,12 @@ module.exports = async function (context, req) {
 
     if (!doc) {
       context.res = {
-        status: 404,
-        body: "Dispositivo no encontrado",
+        status: 200,
+        body: {
+          estado_boton_emergencia: false,
+          sinEstado: true,
+          message: "Dispositivo no encontrado. Asumiendo botón desactivado por defecto."
+        },
       };
       return;
     }

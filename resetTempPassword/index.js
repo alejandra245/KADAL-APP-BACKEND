@@ -1,4 +1,4 @@
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 const bcrypt = require("bcryptjs");
 
 const uri = process.env.MONGO_URI;
@@ -12,9 +12,9 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const {  _id_usuario, newPassword } = req.body;
+  const { _id_usuario, newPassword } = req.body;
 
-  if (!_id_usuario|| !newPassword) {
+  if (!_id_usuario || !newPassword) {
     context.res = {
       status: 400,
       body: { message: "Faltan campos obligatorios (_id_usuario y newPassword)" },
@@ -30,8 +30,16 @@ module.exports = async function (context, req) {
     const db = client.db("kadalDB");
     const users = db.collection("users");
 
+    // 🔥 Aquí buscamos por ambos: _id_usuario o _id (como ObjectId)
+    const filter = {
+      $or: [
+        { _id_usuario: _id_usuario },
+        { _id: new ObjectId(_id_usuario) }
+      ]
+    };
+
     const result = await users.updateOne(
-        { _id_usuario },
+      filter,
       { $set: { password: hashedPassword, isTempPassword: false } }
     );
 
